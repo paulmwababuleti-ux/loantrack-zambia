@@ -16,6 +16,8 @@ const TITLES = { '/': 'Home', '/clients': 'Clients', '/loans': 'Loans' };
 function titleFor(pathname) {
   if (TITLES[pathname]) return TITLES[pathname];
   if (pathname.startsWith('/clients/')) return 'Client';
+  if (pathname === '/loans/new') return 'New loan';
+  if (pathname.startsWith('/loans/')) return 'Loan';
   return null;
 }
 

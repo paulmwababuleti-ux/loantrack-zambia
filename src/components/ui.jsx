@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Loader2, X } from 'lucide-react';
 import { getSignedUrl } from '../lib/supabase';
-import { initials } from '../lib/format';
+import { initials, STATUS_LABEL, STATUS_TONE } from '../lib/format';
 
 export const Spinner = ({ size = 20 }) => <Loader2 size={size} className="animate-spin" />;
 
@@ -33,6 +33,15 @@ export function LogoMark({ size = 64 }) {
       <circle cx="32" cy="32" r="19" fill="none" stroke="#fff" strokeWidth="2.4" />
       <path d="M27 23v18M27 33l10-10M27.5 32.5L37.5 41" fill="none" stroke="#fff" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+/** A small status pill, e.g. "Pending approval" in amber, "Approved" in green. */
+export function Badge({ status, label }) {
+  return (
+    <span className={`inline-block whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-semibold ${STATUS_TONE[status] || 'bg-stone-100 text-stone-700'}`}>
+      {label || STATUS_LABEL[status] || status}
+    </span>
   );
 }
 

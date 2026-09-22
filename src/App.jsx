@@ -7,7 +7,9 @@ import Login from './pages/Login';
 import Home from './pages/Home';
 import Clients from './pages/Clients';
 import ClientDetail from './pages/ClientDetail';
-import ComingSoon from './pages/ComingSoon';
+import Loans from './pages/Loans';
+import LoanForm from './pages/LoanForm';
+import LoanDetail from './pages/LoanDetail';
 
 function SetupNeeded() {
   return (
@@ -54,7 +56,9 @@ export default function App() {
         <Route index element={<Home />} />
         <Route path="clients" element={<Clients />} />
         <Route path="clients/:id" element={<ClientDetail />} />
-        <Route path="loans" element={<ComingSoon title="Loans" phase={3}>Create loans with live calculations, then approve them in Phase 4.</ComingSoon>} />
+        <Route path="loans" element={<Loans />} />
+        <Route path="loans/new" element={<LoanForm />} />
+        <Route path="loans/:id" element={<LoanDetail />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

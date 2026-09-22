@@ -22,3 +22,44 @@ export function normalizePhone(raw) {
 }
 
 export const telHref = (phone) => `tel:${normalizePhone(phone)}`;
+
+/** Same maths as the database's generated columns, so the live preview always matches what gets saved. */
+export function calcLoan(amount, ratePerPeriod, numRepayments) {
+  const a = Number(amount) || 0;
+  const r = Number(ratePerPeriod) || 0;
+  const n = Number(numRepayments) || 0;
+  const round2 = (x) => Math.round((x + Number.EPSILON) * 100) / 100;
+  const interest = round2((a * r * n) / 100);
+  const total = round2(a + interest);
+  const perRepayment = n > 0 ? round2(total / n) : 0;
+  return { interest, total, perRepayment };
+}
+
+/** How often repayments are collected. `days` is an approximation, used only for rough previews. */
+export const FREQUENCY_OPTIONS = [
+  { value: 'weekly', label: 'Weekly', per: 'week', days: 7 },
+  { value: 'biweekly', label: 'Every 2 weeks', per: '2 weeks', days: 14 },
+  { value: 'monthly', label: 'Monthly', per: 'month', days: 30 },
+  { value: 'quarterly', label: 'Every 3 months', per: '3 months', days: 91 },
+  { value: 'semiannually', label: 'Every 6 months', per: '6 months', days: 182 },
+  { value: 'yearly', label: 'Yearly', per: 'year', days: 365 },
+];
+
+export const frequencyLabel = (value) => FREQUENCY_OPTIONS.find((f) => f.value === value)?.label || value;
+export const frequencyPer = (value) => FREQUENCY_OPTIONS.find((f) => f.value === value)?.per || value;
+
+export const STATUS_LABEL = {
+  pending: 'Pending approval',
+  approved: 'Approved',
+  paid: 'Paid',
+  overdue: 'Overdue',
+  rejected: 'Rejected',
+};
+
+export const STATUS_TONE = {
+  pending: 'bg-amber-100 text-amber-900',
+  approved: 'bg-emerald-100 text-emerald-900',
+  paid: 'bg-sky-100 text-sky-900',
+  overdue: 'bg-red-100 text-red-900',
+  rejected: 'bg-stone-200 text-stone-700',
+};

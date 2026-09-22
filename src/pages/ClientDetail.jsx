@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, CreditCard, FileText, MapPin, MessageCircle, Pencil, Phone } from 'lucide-react';
 import { getSignedUrl, supabase } from '../lib/supabase';
-import { Avatar, EmptyState, Sheet, SignedImage, Spinner } from '../components/ui';
+import { Avatar, Badge, EmptyState, Sheet, SignedImage, Spinner } from '../components/ui';
 import ClientForm from '../components/ClientForm';
-import { fmtDate, money, telHref } from '../lib/format';
+import { fmtDate, frequencyLabel, frequencyPer, money, telHref } from '../lib/format';
 
 /** An NRC photo, tappable to open full-size in a new tab (the signed link is fetched once and cached). */
 function NrcPhoto({ path, label }) {
@@ -38,14 +38,16 @@ function NrcPdfLink({ path }) {
 
 function LoanCard({ loan }) {
   return (
-    <div className="w-64 shrink-0 snap-start card p-4">
-      <div className="text-xs font-semibold uppercase tracking-wide text-stone-400">{loan.status}</div>
-      <div className="mt-1 text-2xl font-bold text-stone-900">{money(loan.amount)}</div>
-      <div className="mt-1 text-sm text-stone-500">{loan.weeks} weeks &middot; {Number(loan.interest_rate_per_week)}% / week</div>
+    <Link to={`/loans/${loan.id}`} className="w-64 shrink-0 snap-start card p-4 active:bg-stone-50">
+      <div className="flex items-center justify-between">
+        <Badge status={loan.status} />
+      </div>
+      <div className="mt-2 text-2xl font-bold text-stone-900">{money(loan.amount)}</div>
+      <div className="mt-1 text-sm text-stone-500">{loan.num_repayments}x {frequencyLabel(loan.repayment_frequency).toLowerCase()} &middot; {Number(loan.interest_rate_per_period)}% / {frequencyPer(loan.repayment_frequency)}</div>
       <div className="mt-3 border-t border-stone-100 pt-3 text-sm text-stone-600">
         Started {loan.start_date ? fmtDate(loan.start_date) : 'not yet'}
       </div>
-    </div>
+    </Link>
   );
 }
 
