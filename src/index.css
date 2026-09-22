@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+  body { @apply bg-paper text-stone-900 font-sans antialiased; font-variant-numeric: tabular-nums; }
+  h1, h2, .font-display { font-family: 'Fraunces', Georgia, serif; }
+  button, a, input, select, textarea { touch-action: manipulation; }
+  :focus-visible { outline: 3px solid #3d9a78; outline-offset: 2px; }
+  input, select, textarea { font-size: 16px; } /* 16px stops phones zooming in when you tap a field */
+}
+
+@layer components {
+  /* Thumb-friendly: every button and field is at least 52px tall */
+  .btn { @apply inline-flex min-h-[52px] items-center justify-center gap-2 rounded-xl px-5 text-base font-semibold transition-colors active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50; }
+  .btn-primary { @apply btn bg-brand-600 text-white active:bg-brand-800 md:hover:bg-brand-700; }
+  .btn-ghost { @apply btn border border-stone-300 bg-white text-stone-800 active:bg-stone-100 md:hover:bg-stone-50; }
+  .btn-danger-ghost { @apply btn border border-red-300 bg-white text-red-700 active:bg-red-50; }
+  .input { @apply h-14 w-full rounded-xl border border-stone-300 bg-white px-4 text-base outline-none placeholder:text-stone-400 focus:border-brand-600 focus:ring-4 focus:ring-brand-600/15; }
+  .label { @apply mb-1.5 block text-sm font-semibold text-stone-700; }
+  .card { @apply rounded-2xl border border-stone-200 bg-white; }
+}
+
+@keyframes slide-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.drawer-in { animation: slide-in 0.2s ease-out; }
+.backdrop-in { animation: fade-in 0.2s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
