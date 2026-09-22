@@ -5,6 +5,8 @@ import { Banner, FullScreenLoading } from './components/ui';
 import AppShell from './components/AppShell';
 import Login from './pages/Login';
 import Home from './pages/Home';
+import Clients from './pages/Clients';
+import ClientDetail from './pages/ClientDetail';
 import ComingSoon from './pages/ComingSoon';
 
 function SetupNeeded() {
@@ -50,7 +52,8 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route element={<Protected><AppShell /></Protected>}>
         <Route index element={<Home />} />
-        <Route path="clients" element={<ComingSoon title="Clients" phase={2}>Client list, add client with camera photo, tap-to-call profiles.</ComingSoon>} />
+        <Route path="clients" element={<Clients />} />
+        <Route path="clients/:id" element={<ClientDetail />} />
         <Route path="loans" element={<ComingSoon title="Loans" phase={3}>Create loans with live calculations, then approve them in Phase 4.</ComingSoon>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

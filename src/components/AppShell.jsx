@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Banknote, Home, LogOut, Menu, MoreHorizontal, Users, X } from 'lucide-react';
+import { Banknote, Database, Home, LogOut, Menu, MoreHorizontal, Users, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { APP_NAME } from '../lib/supabase';
 import { LogoMark, RoleBadge } from './ui';
 import InstallPrompt from './InstallPrompt';
+import BackupSheet from './BackupSheet';
 
 const TABS = [
   { to: '/', label: 'Home', icon: Home, end: true },
@@ -12,8 +13,13 @@ const TABS = [
   { to: '/loans', label: 'Loans', icon: Banknote },
 ];
 const TITLES = { '/': 'Home', '/clients': 'Clients', '/loans': 'Loans' };
+function titleFor(pathname) {
+  if (TITLES[pathname]) return TITLES[pathname];
+  if (pathname.startsWith('/clients/')) return 'Client';
+  return null;
+}
 
-function Drawer({ onClose }) {
+function Drawer({ onClose, onBackup }) {
   const { admin, isMaster, signOut } = useAuth();
 
   useEffect(() => {
@@ -49,7 +55,15 @@ function Drawer({ onClose }) {
               <Icon size={24} /> {label}
             </NavLink>
           ))}
-          <div className="mt-4 px-2"><InstallPrompt /></div>
+          <div className="mt-4 space-y-2 px-2">
+            <button
+              onClick={onBackup}
+              className="flex min-h-[56px] w-full items-center gap-4 rounded-xl px-4 text-lg font-medium text-stone-800 active:bg-stone-100"
+            >
+              <Database size={24} /> Backup data
+            </button>
+            <InstallPrompt />
+          </div>
         </nav>
 
         <div className="border-t border-stone-200 p-4">
@@ -65,6 +79,7 @@ export default function AppShell() {
   const { isMaster } = useAuth();
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
+  const [backupOpen, setBackupOpen] = useState(false);
 
   useEffect(() => { setOpen(false); }, [pathname]);
 
@@ -79,7 +94,7 @@ export default function AppShell() {
           <button aria-label="Open menu" onClick={() => setOpen(true)} className="flex h-12 w-12 items-center justify-center rounded-xl text-stone-800 active:bg-stone-100">
             <Menu size={26} />
           </button>
-          <div className="flex-1 font-display text-xl font-bold text-brand-800">{TITLES[pathname] || APP_NAME}</div>
+          <div className="flex-1 font-display text-xl font-bold text-brand-800">{titleFor(pathname) || APP_NAME}</div>
           <RoleBadge master={isMaster} className="mr-2" />
         </div>
       </header>
@@ -102,7 +117,8 @@ export default function AppShell() {
         </div>
       </nav>
 
-      {open && <Drawer onClose={() => setOpen(false)} />}
+      {open && <Drawer onClose={() => setOpen(false)} onBackup={() => { setOpen(false); setBackupOpen(true); }} />}
+      {backupOpen && <BackupSheet onClose={() => setBackupOpen(false)} />}
     </div>
   );
 }
