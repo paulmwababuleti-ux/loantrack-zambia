@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { getSignedUrl, supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 import { Avatar, Badge, Banner, EmptyState, SignedImage, Spinner } from '../components/ui';
+import LoanDecision from '../components/LoanDecision';
 import { fmtDate, frequencyLabel, frequencyPer, money } from '../lib/format';
 
 /** A collateral photo thumbnail, tappable to open full-size in a new tab. */
@@ -19,7 +21,9 @@ function CollateralPhoto({ path }) {
 export default function LoanDetail() {
   const { id } = useParams();
   const location = useLocation();
+  const { isMaster } = useAuth();
   const [loan, setLoan] = useState(undefined);
+  const [banner, setBanner] = useState(location.state?.created ? 'Loan saved. It is Pending approval until the Master Admin approves it.' : '');
 
   const load = useCallback(async () => {
     const { data } = await supabase.from('loans').select('*, clients(*)').eq('id', id).maybeSingle();
@@ -37,9 +41,7 @@ export default function LoanDetail() {
     <div className="space-y-5 pb-4">
       <Link to="/loans" className="inline-flex items-center gap-1 text-sm font-medium text-stone-500 active:text-stone-800"><ArrowLeft size={18} /> Loans</Link>
 
-      {location.state?.created && (
-        <Banner type="ok">Loan saved. It is Pending approval until the Master Admin approves it.</Banner>
-      )}
+      {banner && <Banner type="ok">{banner}</Banner>}
 
       <div className="card p-5">
         <div className="flex items-center justify-between gap-3">
@@ -52,6 +54,16 @@ export default function LoanDetail() {
           </Link>
           <Badge status={loan.status} />
         </div>
+
+        {loan.status === 'pending' && (
+          <div className="mt-4 border-t border-stone-100 pt-4">
+            {isMaster ? (
+              <LoanDecision loan={loan} onDecided={(updated) => { setLoan((prev) => ({ ...prev, ...updated })); setBanner(updated.status === 'approved' ? 'Loan approved.' : 'Loan rejected.'); }} />
+            ) : (
+              <p className="rounded-xl bg-amber-50 px-4 py-3 text-[15px] font-medium text-amber-900">Waiting for the Master Admin to approve.</p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="card overflow-hidden">
@@ -88,10 +100,6 @@ export default function LoanDetail() {
           </div>
         )}
       </div>
-
-      {loan.status === 'pending' && (
-        <Banner type="info">Approving and rejecting loans is built in Phase 4.</Banner>
-      )}
 
       <p className="text-center text-xs text-stone-400">Created {fmtDate(loan.created_at)}</p>
     </div>

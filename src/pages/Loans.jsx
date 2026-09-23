@@ -8,6 +8,7 @@ import { fmtDate, frequencyLabel, money } from '../lib/format';
 export default function Loans() {
   const [loans, setLoans] = useState(null);
   const [q, setQ] = useState('');
+  const [tab, setTab] = useState('all');
 
   const load = useCallback(async () => {
     const { data, error } = await supabase
@@ -19,16 +20,37 @@ export default function Loans() {
 
   useEffect(() => { load(); }, [load]);
 
+  const pendingCount = useMemo(() => (loans || []).filter((l) => l.status === 'pending').length, [loans]);
+
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
-    if (!term) return loans || [];
-    return (loans || []).filter((l) =>
-      [l.clients?.full_name, l.clients?.phone1].some((v) => v?.toLowerCase().includes(term)));
-  }, [loans, q]);
+    return (loans || [])
+      .filter((l) => tab === 'all' || l.status === 'pending')
+      .filter((l) => !term || [l.clients?.full_name, l.clients?.phone1].some((v) => v?.toLowerCase().includes(term)));
+  }, [loans, q, tab]);
 
   return (
     <div className="relative">
       <div className="sticky top-14 z-20 -mx-4 mb-4 border-b border-stone-200 bg-paper px-4 pb-3 pt-1">
+        <div className="mb-3 flex gap-2">
+          <button
+            onClick={() => setTab('all')}
+            className={`flex-1 rounded-xl py-2.5 text-sm font-semibold ${tab === 'all' ? 'bg-brand-600 text-white' : 'bg-stone-100 text-stone-600'}`}
+          >
+            All loans
+          </button>
+          <button
+            onClick={() => setTab('pending')}
+            className={`relative flex-1 rounded-xl py-2.5 text-sm font-semibold ${tab === 'pending' ? 'bg-brand-600 text-white' : 'bg-stone-100 text-stone-600'}`}
+          >
+            Pending
+            {pendingCount > 0 && (
+              <span className={`ml-1.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-xs font-bold ${tab === 'pending' ? 'bg-white text-brand-700' : 'bg-red-600 text-white'}`}>
+                {pendingCount}
+              </span>
+            )}
+          </button>
+        </div>
         <div className="relative">
           <Search size={20} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
           <input className="input pl-11 pr-11" placeholder="Search by client name or phone" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -45,8 +67,8 @@ export default function Loans() {
       ) : (
         <PullToRefresh onRefresh={load}>
           {filtered.length === 0 ? (
-            <EmptyState title={q ? 'No loans match your search' : 'No loans yet'}>
-              {q ? 'Try a different name or phone number.' : 'Tap the + button to create the first loan.'}
+            <EmptyState title={tab === 'pending' ? 'Nothing waiting for approval' : q ? 'No loans match your search' : 'No loans yet'}>
+              {tab === 'pending' ? 'All loans have been approved or rejected.' : q ? 'Try a different name or phone number.' : 'Tap the + button to create the first loan.'}
             </EmptyState>
           ) : (
             <ul className="space-y-3">
