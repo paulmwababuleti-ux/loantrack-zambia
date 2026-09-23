@@ -51,8 +51,9 @@ export function AuthProvider({ children }) {
     admin,
     adminError,
     loading,
-    isMaster: !!admin && admin.is_active && admin.role === 'master_admin',
-    roleLabel: admin?.role === 'master_admin' ? 'Master Admin' : 'Loan Officer',
+    isSuper: !!admin && admin.is_active && admin.role === 'super_admin',
+    isMaster: !!admin && admin.is_active && (admin.role === 'master_admin' || admin.role === 'super_admin'),
+    roleLabel: admin?.role === 'super_admin' ? 'Super Admin' : admin?.role === 'master_admin' ? 'Master Admin' : 'Loan Officer',
     signOut: () => supabase.auth.signOut(),
   };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

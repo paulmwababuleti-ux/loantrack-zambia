@@ -23,6 +23,9 @@ export function normalizePhone(raw) {
 
 export const telHref = (phone) => `tel:${normalizePhone(phone)}`;
 
+/** wa.me link with a message pre-filled, ready for the admin to tap Send. */
+export const waLink = (phone, text) => `https://wa.me/${normalizePhone(phone).replace('+', '')}?text=${encodeURIComponent(text)}`;
+
 /** Same maths as the database's generated columns, so the live preview always matches what gets saved. */
 export function calcLoan(amount, ratePerPeriod, numRepayments) {
   const a = Number(amount) || 0;
@@ -63,3 +66,36 @@ export const STATUS_TONE = {
   overdue: 'bg-red-100 text-red-900',
   rejected: 'bg-stone-200 text-stone-700',
 };
+
+/** Today's date in Zambia (UTC+2) as YYYY-MM-DD, so "overdue" always compares against the right day. */
+export const todayZM = () => new Date(Date.now() + 2 * 3600e3).toISOString().slice(0, 10);
+
+/** An approved loan is overdue once its payback date has passed without being fully paid. */
+export const isOverdue = (loan) =>
+  loan.status === 'approved' && loan.expected_pay_date && loan.expected_pay_date < todayZM();
+
+/** The amount actually owed on this loan: the settled total if settled early, otherwise the original. */
+export const effectiveTotal = (loan) =>
+  loan.settled_early && loan.settlement_total != null ? Number(loan.settlement_total) : Number(loan.total_repayable);
+
+export const balance = (loan) => Math.max(0, effectiveTotal(loan) - Number(loan.amount_paid));
+
+/**
+ * Works out, on the phone, what an early settlement would charge - the same
+ * maths the database uses - so the Master Admin can see it before confirming.
+ * Returns null if the loan isn't in a state where this makes sense yet.
+ */
+export function previewEarlySettlement(loan) {
+  if (loan.status !== 'approved' || !loan.start_date) return null;
+  const periodDays = FREQUENCY_OPTIONS.find((f) => f.value === loan.repayment_frequency)?.days || 7;
+  const elapsedDays = Math.max(0, (new Date(todayZM()) - new Date(loan.start_date)) / 86400000);
+  const elapsedPeriods = Math.min(loan.num_repayments, Math.max(1, Math.ceil(elapsedDays / periodDays)));
+  const round2 = (x) => Math.round((x + Number.EPSILON) * 100) / 100;
+  let newInterest = round2(Number(loan.amount) * Number(loan.interest_rate_per_period) / 100 * elapsedPeriods);
+  let newTotal = round2(Number(loan.amount) + newInterest);
+  if (newTotal < Number(loan.amount_paid)) {
+    newTotal = Number(loan.amount_paid);
+    newInterest = round2(newTotal - Number(loan.amount));
+  }
+  return { elapsedPeriods, newInterest, newTotal, remaining: Math.max(0, round2(newTotal - Number(loan.amount_paid))) };
+}

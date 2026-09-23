@@ -18,6 +18,7 @@
   .btn-ghost { @apply btn border border-stone-300 bg-white text-stone-800 active:bg-stone-100 md:hover:bg-stone-50; }
   .btn-danger-ghost { @apply btn border border-red-300 bg-white text-red-700 active:bg-red-50; }
   .btn-danger { @apply btn bg-red-600 text-white active:bg-red-800 md:hover:bg-red-700; }
+  .btn-sm { @apply min-h-[40px] px-3 text-sm; }
   .input { @apply h-14 w-full rounded-xl border border-stone-300 bg-white px-4 text-base outline-none placeholder:text-stone-400 focus:border-brand-600 focus:ring-4 focus:ring-brand-600/15; }
   .label { @apply mb-1.5 block text-sm font-semibold text-stone-700; }
   .card { @apply rounded-2xl border border-stone-200 bg-white; }

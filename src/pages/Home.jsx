@@ -1,51 +1,38 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle2, Download, MinusCircle, XCircle } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { Link } from 'react-router-dom';
+import { AlertTriangle, Banknote, Clock, Download, Wallet } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { isStandalone, useOnline, useServiceWorkerStatus } from '../lib/pwa';
+import { dashboardStats } from '../lib/loans';
 import { needsBackupReminder, runBackup } from '../lib/backup';
+import { money } from '../lib/format';
 import { Spinner } from '../components/ui';
 import InstallPrompt from '../components/InstallPrompt';
 
-const TABLES = ['clients', 'loans', 'payments'];
-
-function Row({ state, title, detail }) {
-  const icon = {
-    ok: <CheckCircle2 size={24} className="text-emerald-600" />,
-    bad: <XCircle size={24} className="text-red-600" />,
-    idle: <MinusCircle size={24} className="text-stone-400" />,
-  }[state];
-  return (
-    <li className="flex items-start gap-3 px-4 py-3.5">
-      <span className="mt-0.5 shrink-0">{icon}</span>
-      <div className="min-w-0">
-        <div className="font-semibold">{title}</div>
-        <div className="break-words text-[15px] leading-snug text-stone-600">{detail}</div>
-      </div>
-    </li>
+function StatCard({ to, icon: Icon, label, value, tone = 'text-stone-900', iconTone = 'bg-brand-50 text-brand-700' }) {
+  const content = (
+    <div className="card h-full p-4">
+      <div className={`mb-2 flex h-9 w-9 items-center justify-center rounded-full ${iconTone}`}><Icon size={18} /></div>
+      <div className="text-xs font-medium text-stone-500">{label}</div>
+      <div className={`mt-0.5 text-xl font-bold ${tone}`}>{value}</div>
+    </div>
   );
+  return to ? <Link to={to} className="block active:opacity-80">{content}</Link> : content;
 }
 
 export default function Home() {
   const { admin, isMaster } = useAuth();
-  const online = useOnline();
-  const sw = useServiceWorkerStatus();
-  const [db, setDb] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [statsError, setStatsError] = useState('');
   const [showBackupReminder, setShowBackupReminder] = useState(needsBackupReminder());
   const [backupBusy, setBackupBusy] = useState(false);
   const [backupError, setBackupError] = useState('');
 
   useEffect(() => {
-    let alive = true;
-    Promise.all(TABLES.map((t) => supabase.from(t).select('id', { count: 'exact', head: true }))).then((rs) => {
-      if (alive) setDb(TABLES.map((t, i) => ({ table: t, count: rs[i].count, error: rs[i].error?.message })));
-    });
-    return () => { alive = false; };
+    dashboardStats().then(setStats).catch((err) => setStatsError(err.message));
   }, []);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  const dbError = db?.find((d) => d.error);
 
   async function backupNow() {
     setBackupBusy(true);
@@ -80,32 +67,32 @@ export default function Home() {
         </div>
       )}
 
-      <InstallPrompt />
-
       <section>
-        <h3 className="mb-2 text-lg font-semibold">Phase 1 check</h3>
-        <ul className="card divide-y divide-stone-100">
-          <Row state="ok" title="Signed in" detail={admin?.email} />
-          <Row
-            state={!db ? 'idle' : dbError ? 'bad' : 'ok'}
-            title="Database connected"
-            detail={!db ? 'Checking...' : dbError
-              ? `${dbError.table}: ${dbError.error}. Did you run schema.sql in Supabase?`
-              : db.map((d) => `${d.table} (${d.count})`).join(', ') + ' tables are reachable.'}
-          />
-          <Row state={online ? 'ok' : 'bad'} title="Internet" detail={online ? 'Online' : 'Offline. You need a connection to sign in and save.'} />
-          <Row
-            state={isStandalone() ? 'ok' : 'idle'}
-            title="How it is open"
-            detail={isStandalone() ? 'As an installed app (full screen).' : 'In a browser tab. Install it to open it like an app.'}
-          />
-          <Row
-            state={sw === 'active' ? 'ok' : 'idle'}
-            title="App files saved on device"
-            detail={sw === 'active' ? 'Service worker is active.' : sw === 'unsupported' ? 'This browser does not support it.' : 'Not active yet. It starts on the live https site after the first visit.'}
-          />
-        </ul>
+        <h3 className="mb-2 text-lg font-semibold">Dashboard</h3>
+        {statsError ? (
+          <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{statsError}</p>
+        ) : !stats ? (
+          <div className="flex justify-center py-10 text-brand-700"><Spinner size={26} /></div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            <StatCard icon={Banknote} label="Total disbursed" value={money(stats.total_disbursed)} />
+            <StatCard icon={Wallet} label="Total collected" value={money(stats.total_collected)} iconTone="bg-emerald-50 text-emerald-700" />
+            <StatCard icon={Clock} label="Outstanding" value={money(stats.outstanding)} />
+            <StatCard
+              to="/reminders" icon={AlertTriangle} label="Overdue loans" value={stats.overdue_count}
+              tone={stats.overdue_count > 0 ? 'text-red-700' : 'text-stone-900'}
+              iconTone="bg-red-50 text-red-600"
+            />
+            <StatCard
+              to="/loans" icon={Clock} label="Pending approval" value={stats.pending_count}
+              tone={stats.pending_count > 0 ? 'text-amber-700' : 'text-stone-900'}
+              iconTone="bg-amber-50 text-amber-700"
+            />
+          </div>
+        )}
       </section>
+
+      <InstallPrompt />
     </div>
   );
 }

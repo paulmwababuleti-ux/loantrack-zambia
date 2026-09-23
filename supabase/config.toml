@@ -1,0 +1,6 @@
+project_id = "loantrack"
+
+# Lets the optional daily cron job call this function without a user login.
+# The function checks the x-cron-secret header itself instead.
+[functions.daily-reminders]
+verify_jwt = false

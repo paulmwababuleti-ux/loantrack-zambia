@@ -54,6 +54,7 @@ export default function ClientForm({ initial, onSaved, onCancel }) {
   const [nrc_number, setNrcNumber] = useState(initial?.nrc_number || '');
   const [phone1, setPhone1] = useState(initial?.phone1 || '');
   const [phone2, setPhone2] = useState(initial?.phone2 || '');
+  const [email, setEmail] = useState(initial?.email || '');
   const [address, setAddress] = useState(initial?.address || '');
 
   const [file, setFile] = useState(null);
@@ -126,6 +127,7 @@ export default function ClientForm({ initial, onSaved, onCancel }) {
         nrc_number: nrc_number.trim(),
         phone1: phone1.trim(),
         phone2: phone2.trim() || null,
+        email: email.trim() || null,
         address: address.trim(),
         photo_url,
         nrc_photo_front_url,
@@ -220,6 +222,10 @@ export default function ClientForm({ initial, onSaved, onCancel }) {
       <div>
         <label className="label" htmlFor="phone2">Second phone (optional)</label>
         <input id="phone2" className="input" type="tel" inputMode="tel" value={phone2} onChange={(e) => setPhone2(e.target.value)} />
+      </div>
+      <div>
+        <label className="label" htmlFor="email">Email (optional)</label>
+        <input id="email" className="input" type="email" inputMode="email" autoCapitalize="none" value={email} onChange={(e) => setEmail(e.target.value)} />
       </div>
       <div>
         <label className="label" htmlFor="address">Physical address</label>

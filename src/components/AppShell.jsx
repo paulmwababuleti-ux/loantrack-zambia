@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Banknote, Database, Home, LogOut, Menu, MoreHorizontal, Users, X } from 'lucide-react';
+import { Banknote, Bell, Database, Home, LogOut, Menu, MoreHorizontal, Settings as SettingsIcon, Users, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { APP_NAME } from '../lib/supabase';
 import { LogoMark, RoleBadge } from './ui';
@@ -11,8 +11,9 @@ const TABS = [
   { to: '/', label: 'Home', icon: Home, end: true },
   { to: '/clients', label: 'Clients', icon: Users },
   { to: '/loans', label: 'Loans', icon: Banknote },
+  { to: '/reminders', label: 'Remind', icon: Bell },
 ];
-const TITLES = { '/': 'Home', '/clients': 'Clients', '/loans': 'Loans' };
+const TITLES = { '/': 'Home', '/clients': 'Clients', '/loans': 'Loans', '/reminders': 'Reminders', '/settings': 'Settings' };
 function titleFor(pathname) {
   if (TITLES[pathname]) return TITLES[pathname];
   if (pathname.startsWith('/clients/')) return 'Client';
@@ -45,7 +46,7 @@ function Drawer({ onClose, onBackup }) {
         <div className="border-b border-stone-200 px-4 py-4">
           <div className="truncate text-lg font-semibold">{admin?.full_name}</div>
           <div className="truncate text-sm text-stone-500">{admin?.email}</div>
-          <RoleBadge master={isMaster} className="mt-2" />
+          <RoleBadge role={admin?.role} className="mt-2" />
         </div>
 
         <nav className="flex-1 overflow-y-auto px-2 py-2">
@@ -58,6 +59,14 @@ function Drawer({ onClose, onBackup }) {
             </NavLink>
           ))}
           <div className="mt-4 space-y-2 px-2">
+            {isMaster && (
+              <NavLink
+                to="/settings" onClick={onClose}
+                className={({ isActive }) => `flex min-h-[56px] items-center gap-4 rounded-xl px-4 text-lg font-medium ${isActive ? 'bg-brand-50 text-brand-800' : 'text-stone-800 active:bg-stone-100'}`}
+              >
+                <SettingsIcon size={24} /> Settings
+              </NavLink>
+            )}
             <button
               onClick={onBackup}
               className="flex min-h-[56px] w-full items-center gap-4 rounded-xl px-4 text-lg font-medium text-stone-800 active:bg-stone-100"
@@ -78,7 +87,7 @@ function Drawer({ onClose, onBackup }) {
 }
 
 export default function AppShell() {
-  const { isMaster } = useAuth();
+  const { admin } = useAuth();
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
@@ -97,7 +106,7 @@ export default function AppShell() {
             <Menu size={26} />
           </button>
           <div className="flex-1 font-display text-xl font-bold text-brand-800">{titleFor(pathname) || APP_NAME}</div>
-          <RoleBadge master={isMaster} className="mr-2" />
+          <RoleBadge role={admin?.role} className="mr-2" />
         </div>
       </header>
 
@@ -107,7 +116,7 @@ export default function AppShell() {
 
       {/* Bottom navigation (like a phone app) */}
       <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-white pb-[env(safe-area-inset-bottom)]">
-        <div className="mx-auto grid max-w-xl grid-cols-4">
+        <div className="mx-auto grid max-w-xl grid-cols-5">
           {TABS.map(({ to, label, icon: Icon, end }) => (
             <NavLink key={to} to={to} end={end} className={tabClass}>
               <Icon size={24} /> {label}

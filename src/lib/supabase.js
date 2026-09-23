@@ -44,6 +44,25 @@ export async function uploadDocument(bucket, folder, file) {
   return path;
 }
 
+/**
+ * Calls a Supabase Edge Function and returns a readable error message on failure.
+ * Never throws for a function that's simply not set up yet - callers that treat
+ * notifications as optional (loan-approved, notify-pending) already wrap this
+ * in try/catch so a missing Google/Resend setup never blocks the real action.
+ */
+export async function callFn(name, body) {
+  const { data, error } = await supabase.functions.invoke(name, { body });
+  if (error) {
+    let msg = error.message;
+    try {
+      const j = await error.context.json();
+      if (j?.error) msg = j.error;
+    } catch { /* keep default message */ }
+    throw new Error(msg);
+  }
+  return data;
+}
+
 /** Short-lived signed link for a private photo, cached in memory for the session. */
 const signedUrlCache = new Map();
 export async function getSignedUrl(bucket, path, seconds = 6 * 3600) {

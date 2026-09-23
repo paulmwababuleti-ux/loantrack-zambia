@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, CreditCard, FileText, MapPin, MessageCircle, Pencil, Phone } from 'lucide-react';
+import { ArrowLeft, CreditCard, FileText, Mail, MapPin, MessageCircle, Pencil, Phone } from 'lucide-react';
 import { getSignedUrl, supabase } from '../lib/supabase';
 import { Avatar, Badge, EmptyState, Sheet, SignedImage, Spinner } from '../components/ui';
 import ClientForm from '../components/ClientForm';
@@ -59,7 +59,7 @@ export default function ClientDetail() {
 
   const load = useCallback(async () => {
     const [c, l] = await Promise.all([
-      supabase.from('clients').select('*').eq('id', id).maybeSingle(),
+      supabase.from('clients').select('*, admins(full_name)').eq('id', id).maybeSingle(),
       supabase.from('loans').select('*').eq('client_id', id).order('created_at', { ascending: false }),
     ]);
     setClient(c.data ?? null);
@@ -115,6 +115,16 @@ export default function ClientDetail() {
             <div className="text-[17px] font-medium text-stone-900">Message {client.full_name.split(' ')[0]}</div>
           </div>
         </a>
+        {client.email && (
+          <a href={`mailto:${client.email}`} className="flex items-center gap-3 px-4 py-4 active:bg-stone-50">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-50 text-brand-700"><Mail size={20} /></div>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs text-stone-500">Email</div>
+              <div className="truncate text-[17px] font-medium text-stone-900">{client.email}</div>
+            </div>
+            <span className="text-xs font-semibold text-brand-700">Email</span>
+          </a>
+        )}
         <div className="flex items-start gap-3 px-4 py-4">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700"><MapPin size={20} /></div>
           <div className="min-w-0 flex-1">
@@ -153,7 +163,7 @@ export default function ClientDetail() {
         )}
       </div>
 
-      <p className="text-center text-xs text-stone-400">Client added {fmtDate(client.created_at)}</p>
+      <p className="text-center text-xs text-stone-400">Added by {client.admins?.full_name || 'Unknown'} on {fmtDate(client.created_at)}</p>
 
       {editing && (
         <Sheet title="Edit client" onClose={() => setEditing(false)}>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Check, X } from 'lucide-react';
 import { approveLoan, rejectLoan } from '../lib/loans';
+import { callFn } from '../lib/supabase';
 import { Banner, Sheet, Spinner } from './ui';
 
 /**
@@ -20,7 +21,15 @@ export default function LoanDecision({ loan, onDecided }) {
     setError('');
     try {
       const updated = await approveLoan(loan.id);
-      onDecided(updated);
+      let note = 'Loan approved.';
+      try {
+        const r = await callFn('loan-approved', { loan_id: loan.id });
+        if (r.calendar === 'skipped') note += ' Google Calendar is not connected yet, so no events were created.';
+        else note += ` ${r.created} calendar event${r.created === 1 ? '' : 's'} created.` + (r.failed ? ` ${r.failed} failed.` : '');
+      } catch {
+        note += ' Calendar events could not be created.';
+      }
+      onDecided(updated, note);
     } catch (err) {
       setError(err.message);
     } finally {

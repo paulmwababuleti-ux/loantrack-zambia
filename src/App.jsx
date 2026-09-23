@@ -10,6 +10,8 @@ import ClientDetail from './pages/ClientDetail';
 import Loans from './pages/Loans';
 import LoanForm from './pages/LoanForm';
 import LoanDetail from './pages/LoanDetail';
+import Reminders from './pages/Reminders';
+import Settings from './pages/Settings';
 
 function SetupNeeded() {
   return (
@@ -47,6 +49,11 @@ function Protected({ children }) {
   return children;
 }
 
+function MasterOnly({ children }) {
+  const { isMaster } = useAuth();
+  return isMaster ? children : <Navigate to="/" replace />;
+}
+
 export default function App() {
   if (configMissing) return <SetupNeeded />;
   return (
@@ -59,6 +66,8 @@ export default function App() {
         <Route path="loans" element={<Loans />} />
         <Route path="loans/new" element={<LoanForm />} />
         <Route path="loans/:id" element={<LoanDetail />} />
+        <Route path="reminders" element={<Reminders />} />
+        <Route path="settings" element={<MasterOnly><Settings /></MasterOnly>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

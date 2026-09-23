@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Camera, ImagePlus, X } from 'lucide-react';
-import { supabase, uploadPhoto } from '../lib/supabase';
+import { callFn, supabase, uploadPhoto } from '../lib/supabase';
 import ClientPicker from '../components/ClientPicker';
 import { Banner, Spinner } from '../components/ui';
 import { calcLoan, FREQUENCY_OPTIONS, frequencyPer, money } from '../lib/format';
@@ -52,6 +52,7 @@ export default function LoanForm() {
         collateral_images,
       }).select().single();
       if (error) throw error;
+      callFn('notify-pending', { loan_id: data.id }).catch(() => {}); // emails the Master Admin; never blocks saving the loan
       navigate(`/loans/${data.id}`, { replace: true, state: { created: true } });
     } catch (err) {
       setError(err.message);

@@ -18,12 +18,12 @@ export function Banner({ type = 'info', children }) {
   return <div role={type === 'error' ? 'alert' : undefined} className={`rounded-xl border px-4 py-3 text-[15px] leading-snug ${cls}`}>{children}</div>;
 }
 
-export function RoleBadge({ master, className = '' }) {
-  return (
-    <span className={`inline-block rounded-md px-2 py-0.5 text-xs font-semibold ${master ? 'bg-amber-100 text-amber-900' : 'bg-sky-100 text-sky-900'} ${className}`}>
-      {master ? 'Master Admin' : 'Loan Officer'}
-    </span>
-  );
+export function RoleBadge({ role, className = '' }) {
+  const label = role === 'super_admin' ? 'Super Admin' : role === 'master_admin' ? 'Master Admin' : 'Loan Officer';
+  const tone = role === 'super_admin' ? 'bg-violet-100 text-violet-900'
+    : role === 'master_admin' ? 'bg-amber-100 text-amber-900'
+    : 'bg-sky-100 text-sky-900';
+  return <span className={`inline-block rounded-md px-2 py-0.5 text-xs font-semibold ${tone} ${className}`}>{label}</span>;
 }
 
 export function LogoMark({ size = 64 }) {
