@@ -4,11 +4,11 @@ import { createAdmin, generatePassword } from '../lib/admins';
 import { Banner, Sheet, Spinner } from './ui';
 
 /** Creates a new staff account. The role dropdown only offers roles the current viewer is allowed to create. */
-export default function AddAdminSheet({ isSuper, onClose, onCreated }) {
+export default function AddAdminSheet({ isSuper, defaultRole = 'loan_officer', onClose, onCreated }) {
   const [full_name, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState(generatePassword());
-  const [role, setRole] = useState('loan_officer');
+  const [role, setRole] = useState(defaultRole);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -28,7 +28,7 @@ export default function AddAdminSheet({ isSuper, onClose, onCreated }) {
   }
 
   return (
-    <Sheet title="Add staff account" onClose={onClose}>
+    <Sheet title={defaultRole === 'loan_officer' ? 'Add officer' : 'Add admin'} onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
         <div>
           <label className="label" htmlFor="admin-name">Full name</label>

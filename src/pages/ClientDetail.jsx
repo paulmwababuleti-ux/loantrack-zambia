@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, CreditCard, FileText, Mail, MapPin, MessageCircle, Pencil, Phone } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, CreditCard, FileText, Mail, MapPin, MessageCircle, Pencil, Phone, Trash2 } from 'lucide-react';
 import { getSignedUrl, supabase } from '../lib/supabase';
-import { Avatar, Badge, EmptyState, Sheet, SignedImage, Spinner } from '../components/ui';
+import { useAuth } from '../context/AuthContext';
+import { Avatar, Badge, Banner, EmptyState, Sheet, SignedImage, Spinner } from '../components/ui';
 import ClientForm from '../components/ClientForm';
 import { fmtDate, frequencyLabel, frequencyPer, money, telHref } from '../lib/format';
 
@@ -53,9 +54,13 @@ function LoanCard({ loan }) {
 
 export default function ClientDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { isMaster } = useAuth();
   const [client, setClient] = useState(undefined);
   const [loans, setLoans] = useState([]);
   const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     const [c, l] = await Promise.all([
@@ -68,6 +73,26 @@ export default function ClientDetail() {
 
   useEffect(() => { load(); }, [load]);
 
+  async function deleteClient() {
+    if (!window.confirm(`Delete ${client.full_name}? This removes their profile and photos permanently and cannot be undone.`)) return;
+    setDeleting(true);
+    setError('');
+    const { error: deleteError } = await supabase.from('clients').delete().eq('id', id);
+    if (deleteError) {
+      setDeleting(false);
+      if (deleteError.code === '23503') {
+        setError(`${client.full_name} has ${loans.length} loan${loans.length === 1 ? '' : 's'} on record and can't be deleted, to keep that history intact.`);
+      } else {
+        setError(deleteError.message);
+      }
+      return;
+    }
+    const paths = [client.photo_url, client.nrc_photo_front_url, client.nrc_photo_back_url].filter(Boolean);
+    if (paths.length) await supabase.storage.from('client-photos').remove(paths);
+    if (client.nrc_pdf_path) await supabase.storage.from('client-documents').remove([client.nrc_pdf_path]);
+    navigate('/clients', { replace: true });
+  }
+
   if (client === undefined) return <div className="flex justify-center py-16 text-brand-700"><Spinner size={28} /></div>;
   if (client === null) return <EmptyState title="Client not found" />;
 
@@ -75,13 +100,22 @@ export default function ClientDetail() {
     <div className="space-y-6 pb-4">
       <Link to="/clients" className="inline-flex items-center gap-1 text-sm font-medium text-stone-500 active:text-stone-800"><ArrowLeft size={18} /> Clients</Link>
 
+      {error && <Banner type="error">{error}</Banner>}
+
       <div className="card flex flex-col items-center gap-3 p-6 text-center">
         <Avatar name={client.full_name} path={client.photo_url} size={96} />
         <div>
           <h1 className="text-2xl font-bold">{client.full_name}</h1>
           <p className="text-sm text-stone-500">NRC {client.nrc_number}</p>
         </div>
-        <button className="btn-ghost" onClick={() => setEditing(true)}><Pencil size={18} /> Edit details</button>
+        <div className="flex gap-2">
+          <button className="btn-ghost" onClick={() => setEditing(true)}><Pencil size={18} /> Edit details</button>
+          {isMaster && (
+            <button className="btn-danger-ghost" onClick={deleteClient} disabled={deleting}>
+              {deleting ? <Spinner size={18} /> : <><Trash2 size={18} /> Delete</>}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tap to call */}

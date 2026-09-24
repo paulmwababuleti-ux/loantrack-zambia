@@ -224,8 +224,9 @@ export default function ClientForm({ initial, onSaved, onCancel }) {
         <input id="phone2" className="input" type="tel" inputMode="tel" value={phone2} onChange={(e) => setPhone2(e.target.value)} />
       </div>
       <div>
-        <label className="label" htmlFor="email">Email (optional)</label>
-        <input id="email" className="input" type="email" inputMode="email" autoCapitalize="none" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <label className="label" htmlFor="email">Email</label>
+        <input id="email" className="input" type="email" inputMode="email" required autoCapitalize="none" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <p className="mt-1 text-xs text-stone-500">Used to email them about their loan status and payment reminders.</p>
       </div>
       <div>
         <label className="label" htmlFor="address">Physical address</label>

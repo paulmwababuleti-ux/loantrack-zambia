@@ -2,8 +2,8 @@
 // Admins that a loan needs approval, and emails the client confirming
 // their application was received.
 import { errorResponse, json, preflight } from '../_shared/cors.ts';
-import { money, requireAdmin } from '../_shared/auth.ts';
-import { esc, sendEmail } from '../_shared/notify.ts';
+import { esc, money, requireAdmin } from '../_shared/auth.ts';
+import { sendEmail } from '../_shared/notify.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return preflight();

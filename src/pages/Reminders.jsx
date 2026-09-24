@@ -78,9 +78,15 @@ export default function Reminders() {
     setEmailResult('');
     try {
       const r = await callFn('daily-reminders', {});
-      if (r.due === 0) setEmailResult("Nothing due tomorrow, so no email was needed.");
-      else if (r.email?.sent) setEmailResult(`Emailed all admins about ${r.due} repayment(s) due tomorrow.`);
-      else setEmailResult(`Could not send the email: ${r.email?.reason || 'check that Resend is connected.'}`);
+      const parts = [];
+      if (r.due === 0) parts.push('Nothing due tomorrow for admins.');
+      else if (r.adminEmail?.sent) parts.push(`Emailed admins about ${r.due} repayment(s) due tomorrow.`);
+      else parts.push(`Admin email failed: ${r.adminEmail?.reason || 'check that Resend is connected.'}`);
+
+      if (r.clients2Day || r.clientsDueToday) {
+        parts.push(`Emailed ${r.clients2Day} client(s) due in 2 days and ${r.clientsDueToday} due today.`);
+      }
+      setEmailResult(parts.join(' '));
     } catch (err) {
       setEmailResult(`Could not send: ${err.message}`);
     } finally {
@@ -103,7 +109,7 @@ export default function Reminders() {
       {isMaster && (
         <div>
           <button className="btn-ghost w-full" onClick={emailReminders} disabled={emailing}>
-            {emailing ? <Spinner size={18} /> : <Mail size={18} />} Email tomorrow's reminders to all admins
+            {emailing ? <Spinner size={18} /> : <Mail size={18} />} Email reminders now
           </button>
           {emailResult && <p className="mt-2 text-center text-sm text-stone-600">{emailResult}</p>}
         </div>

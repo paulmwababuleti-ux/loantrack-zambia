@@ -17,6 +17,7 @@ create table public.admins (
   full_name   text not null,
   role        text not null default 'loan_officer' check (role in ('super_admin', 'master_admin', 'loan_officer')),
   is_active   boolean not null default true,
+  receives_email_notifications boolean not null default true,
   created_at  timestamptz not null default now()
 );
 
@@ -83,6 +84,8 @@ create table public.installments (
   due_date           date not null,
   amount_due         numeric(14,2) not null,
   calendar_event_id  text,
+  reminder_2day_sent_at timestamptz,   -- so the client's "due in 2 days" email only ever sends once
+  reminder_due_sent_at  timestamptz,   -- same, for the "due today" email
   unique (loan_id, period_no)
 );
 
@@ -151,6 +154,28 @@ $$;
 -- 3. RULES THAT CANNOT BE BYPASSED FROM THE PHONE OR BROWSER
 -- ---------------------------------------------------------------------
 -- (Rules apply to signed-in app users. The SQL Editor / service role is not restricted.)
+
+-- Lets a signed-in admin change ONLY their own notification preference -
+-- nothing else about their own row, and nothing about anyone else's. A
+-- service-role call (the manage-admin function) is unrestricted, exactly
+-- like every other "self" rule in this schema.
+create or replace function public.enforce_admin_self_edit() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null then return new; end if;
+
+  if new.id <> auth.uid()
+  or new.role       is distinct from old.role
+  or new.is_active  is distinct from old.is_active
+  or new.email      is distinct from old.email
+  or new.full_name  is distinct from old.full_name then
+    raise exception 'You can only change your own email notification preference here';
+  end if;
+  return new;
+end $$;
+
+create trigger trg_admins_self_edit before update on public.admins
+  for each row execute function public.enforce_admin_self_edit();
 
 create or replace function public.enforce_loan_rules() returns trigger
 language plpgsql security definer set search_path = public as $$
@@ -510,9 +535,12 @@ alter table public.activity_logs enable row level security;
 
 revoke all on all tables in schema public from anon;   -- signed-out visitors get nothing
 
--- admins: you can always read your own row; admins can read the team list. Changes are made in the dashboard.
+-- admins: you can always read your own row; admins can read the team list. Most changes go through
+-- the manage-admin function; the one exception below lets you flip your own email switch directly.
 create policy admins_read on public.admins for select to authenticated
   using (id = auth.uid() or public.is_admin());
+create policy admins_update_self on public.admins for update to authenticated
+  using (id = auth.uid()) with check (id = auth.uid());
 
 -- clients: any admin adds/edits; only the Master Admin deletes
 create policy clients_read   on public.clients for select to authenticated using (public.is_admin());

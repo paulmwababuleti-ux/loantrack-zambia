@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { recordPayment } from '../lib/loans';
+import { callFn } from '../lib/supabase';
 import { balance, money } from '../lib/format';
 import { Banner, Sheet, Spinner } from './ui';
 
@@ -29,6 +30,7 @@ export default function PaymentSheet({ loan, onClose, onRecorded }) {
     setError('');
     try {
       const payment = await recordPayment(loan.id, { amount: n, method, note });
+      callFn('payment-received', { loan_id: loan.id, amount: payment.amount, paid_on: payment.paid_on }).catch(() => {}); // emails the client; never blocks recording the payment
       onRecorded(payment);
     } catch (err) {
       setError(err.message);

@@ -45,6 +45,25 @@ export function Badge({ status, label }) {
   );
 }
 
+/** A simple on/off switch, thumb-friendly (52px tall tap target via the wrapping label). */
+export function Toggle({ checked, onChange, label, hint, disabled }) {
+  return (
+    <label className={`flex min-h-[52px] items-center justify-between gap-3 ${disabled ? 'opacity-50' : ''}`}>
+      <span>
+        <span className="block text-[15px] font-medium text-stone-900">{label}</span>
+        {hint && <span className="block text-xs text-stone-500">{hint}</span>}
+      </span>
+      <button
+        type="button" role="switch" aria-checked={checked} disabled={disabled}
+        onClick={() => onChange(!checked)}
+        className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${checked ? 'bg-brand-600' : 'bg-stone-300'}`}
+      >
+        <span className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-7' : 'translate-x-1'}`} />
+      </button>
+    </label>
+  );
+}
+
 export function EmptyState({ title, children, action }) {
   return (
     <div className="px-4 py-16 text-center">

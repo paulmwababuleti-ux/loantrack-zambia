@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Banknote, Bell, Database, Home, LogOut, Menu, MoreHorizontal, Settings as SettingsIcon, Users, X } from 'lucide-react';
+import { Banknote, Bell, Database, Home, LogOut, Menu, MoreHorizontal, Settings as SettingsIcon, Users, WifiOff, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { APP_NAME } from '../lib/supabase';
+import { useOnline } from '../lib/pwa';
 import { LogoMark, RoleBadge } from './ui';
 import InstallPrompt from './InstallPrompt';
 import BackupSheet from './BackupSheet';
@@ -89,6 +90,7 @@ function Drawer({ onClose, onBackup }) {
 export default function AppShell() {
   const { admin } = useAuth();
   const { pathname } = useLocation();
+  const online = useOnline();
   const [open, setOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
 
@@ -108,6 +110,11 @@ export default function AppShell() {
           <div className="flex-1 font-display text-xl font-bold text-brand-800">{titleFor(pathname) || APP_NAME}</div>
           <RoleBadge role={admin?.role} className="mr-2" />
         </div>
+        {!online && (
+          <div className="flex items-center justify-center gap-2 bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white">
+            <WifiOff size={14} /> No internet connection - changes can't be saved until you're back online
+          </div>
+        )}
       </header>
 
       <main className="mx-auto max-w-xl px-4 pb-32 pt-5">

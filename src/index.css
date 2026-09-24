@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 @layer base {
-  html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
-  body { @apply bg-paper text-stone-900 font-sans antialiased; font-variant-numeric: tabular-nums; }
+  html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+  body { @apply bg-paper text-stone-900 font-sans antialiased; font-variant-numeric: tabular-nums; overflow-x: hidden; }
   h1, h2, .font-display { font-family: 'Fraunces', Georgia, serif; }
   button, a, input, select, textarea { touch-action: manipulation; }
   :focus-visible { outline: 3px solid #3d9a78; outline-offset: 2px; }

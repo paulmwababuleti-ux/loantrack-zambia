@@ -13,8 +13,8 @@
 //   2. A scheduled job (pg_cron) calls it with the x-cron-secret header -
 //      see docs/GOOGLE_CALENDAR_AND_EMAIL.md.
 import { errorResponse, json, preflight } from '../_shared/cors.ts';
-import { adminClient, HttpError, money, requireAdmin } from '../_shared/auth.ts';
-import { esc, sendEmail } from '../_shared/notify.ts';
+import { adminClient, esc, HttpError, money, requireAdmin } from '../_shared/auth.ts';
+import { sendEmail } from '../_shared/notify.ts';
 
 const round2 = (x: number) => Math.round((x + Number.EPSILON) * 100) / 100;
 
